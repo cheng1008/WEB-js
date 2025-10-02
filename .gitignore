@@ -2,7 +2,7 @@
 .env
 data/users.json
 
-# Python cache
+# Python Cache
 __pycache__/
 *.pyc
 *.pyo
