@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>登入成功</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h2>登入成功 🎉</h2>
+    <p id="user-info"></p>
+    <button id="logout-btn">登出</button>
+  </div>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem("currentUser"));
+    if (user) {
+      document.getElementById("user-info").innerText =
+        `歡迎 ${user.name}（${user.email}）`;
+    } else {
+      window.location.href = "/";
+    }
+    document.getElementById("logout-btn").addEventListener("click", () => {
+      localStorage.removeItem("currentUser");
+      window.location.href = "/";
+    });
+  </script>
+</body>
+</html>
