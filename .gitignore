@@ -1,0 +1,14 @@
+# Environment
+.env
+data/users.json
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# VSCode
+.vscode/
+
+# Logs
+*.log

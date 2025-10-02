@@ -1,29 +1,69 @@
 from flask import Flask, render_template, request, jsonify
-import json, os, time, traceback
+import json, os, time, traceback, datetime
 from json import JSONDecodeError
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from pyngrok import ngrok
 
+# === 初始化 Flask ===
 app = Flask(__name__)
 
-# 相對路徑設定（以目前執行的目錄為基準）
+# === 檔案設定 ===
 DATA_DIR = "data"
 USERS_FILE = os.path.join(DATA_DIR, "users.json")
+LOG_FILE = "login_log.txt"
 
-# 如果資料夾不存在就建立
 if not os.path.exists(DATA_DIR):
     os.makedirs(DATA_DIR)
 
-# 初始化 users.json
 if not os.path.exists(USERS_FILE):
     with open(USERS_FILE, "w", encoding="utf-8") as f:
         json.dump([], f, ensure_ascii=False, indent=2)
 
-# --- 輔助函式 ---
+# === Gmail 寄信設定 ===
+GMAIL_USER = "airing777xx@gmail.com"       # 你的 Gmail
+GMAIL_PASS = "dyctctnluxecpoqn"            # Gmail 應用程式密碼
+
+def send_verification_email(to_email, username):
+    """寄送驗證信"""
+    subject = "帳號註冊驗證信"
+    body = f"""
+    親愛的 {username} 您好：
+
+    感謝您註冊本網站服務！
+
+    ✅ 這是一封驗證郵件，請確認您的信箱正確。
+    您現在可以回到網站登入系統。
+
+    此致，
+    Flask 登入系統 敬上
+    """
+
+    msg = MIMEMultipart()
+    msg["From"] = GMAIL_USER
+    msg["To"] = to_email
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body, "plain", "utf-8"))
+
+    try:
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+        server.login(GMAIL_USER, GMAIL_PASS)
+        server.send_message(msg)
+        server.quit()
+        print(f"✅ 驗證信已寄出至 {to_email}")
+        return True
+    except Exception as e:
+        print("❌ 寄信失敗：", e)
+        return False
+
+# === 輔助函式 ===
 def load_users():
     try:
         with open(USERS_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     except JSONDecodeError:
-        # 檔案壞掉重建
         with open(USERS_FILE, "w", encoding="utf-8") as f:
             json.dump([], f, ensure_ascii=False, indent=2)
         return []
@@ -32,7 +72,7 @@ def save_users(users):
     with open(USERS_FILE, "w", encoding="utf-8") as f:
         json.dump(users, f, ensure_ascii=False, indent=2)
 
-# --- 路由 ---
+# === 路由 ===
 @app.route("/")
 def index():
     time.sleep(2.5)
@@ -61,11 +101,15 @@ def register():
 
         users.append({"name": name, "email": email, "password": password})
         save_users(users)
-        return jsonify({"ok": True, "msg": "註冊成功"}), 200
+
+        # ✅ 註冊成功後寄出驗證信
+        send_verification_email(email, name)
+
+        return jsonify({"ok": True, "msg": "註冊成功，驗證信已寄出"}), 200
 
     except Exception as e:
         app.logger.error("REGISTER ERROR:\n" + traceback.format_exc())
-        return jsonify({"ok": False, "msg": "伺服器錯誤，請稍後再試"}), 500
+        return jsonify({"ok": False, "msg": "伺服器錯誤"}), 500
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -73,6 +117,7 @@ def login():
         data = request.get_json(force=True)
         username_or_email = (data.get("usernameOrEmail") or "").strip().lower()
         password = (data.get("password") or "").strip()
+        user_ip = request.remote_addr  # ✅ 取得使用者 IP
 
         users = load_users()
         user = next(
@@ -85,11 +130,23 @@ def login():
         if user["password"] != password:
             return jsonify({"ok": False, "msg": "密碼錯誤"}), 401
 
+        # ✅ 登入成功：印出與記錄 Email + IP
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        log_entry = f"[{now}] 使用者登入：{user['email']} | IP：{user_ip}\n"
+
+        with open(LOG_FILE, "a", encoding="utf-8") as f:
+            f.write(log_entry)
+
+        print(f"📩 {log_entry.strip()}")
+
         return jsonify({"ok": True, "msg": "登入成功", "user": user}), 200
 
     except Exception as e:
         app.logger.error("LOGIN ERROR:\n" + traceback.format_exc())
-        return jsonify({"ok": False, "msg": "伺服器錯誤，請稍後再試"}), 500
+        return jsonify({"ok": False, "msg": "伺服器錯誤"}), 500
 
+# === Ngrok 公開網址 ===
 if __name__ == "__main__":
-    app.run(debug=True)
+    public_url = ngrok.connect(5000)
+    print("🔗 公開網址:", public_url)
+    app.run()
