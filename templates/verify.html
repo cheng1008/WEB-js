@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>信箱驗證</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="container">
+    {% if ok %}
+      <h2>✅ 信箱驗證成功</h2>
+      <p>您的信箱（{{ email }}）已完成驗證，現在可以回到登入頁面進行登入。</p>
+      <a href="/" style="display:inline-block;margin-top:12px;">返回登入</a>
+    {% else %}
+      <h2>❌ 驗證失敗</h2>
+      <p>驗證連結無效或已使用，請回到註冊頁重新申請或聯絡管理員。</p>
+      <a href="/" style="display:inline-block;margin-top:12px;">回首頁</a>
+    {% endif %}
+  </div>
+</body>
+</html>
