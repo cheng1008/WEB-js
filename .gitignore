@@ -1,14 +1,9 @@
-# Environment
 .env
 data/users.json
+data/mail_log.txt
 
-# Python Cache
 __pycache__/
 *.pyc
 *.pyo
-
-# VSCode
 .vscode/
-
-# Logs
 *.log

@@ -13,5 +13,12 @@
     "name": "cheng108",
     "email": "garry8718@gmail.com",
     "password": "Wxc951008"
+  },
+  {
+    "name": "botontax",
+    "email": "titan3682@gmail.com",
+    "password": "Wxc951008",
+    "verified": false,
+    "token": "14811771-0203-4068-ab3b-cd25b173942a"
   }
 ]

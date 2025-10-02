@@ -27,6 +27,7 @@ GMAIL_USER = os.getenv("GMAIL_USER")
 GMAIL_PASS = os.getenv("GMAIL_PASS")
 
 
+
 # === 寄信功能（HTML 美化按鈕版） ===
 def send_verification_email(to_email, username, token, base_url):
     """寄送 Gmail 驗證信（HTML 按鈕版）"""
